@@ -4,7 +4,7 @@
     "type": "thelia-module",
     "require": {
         "thelia/installer": "~1.0",
-        "thelia/thelia-library-module": "~1.2.0"
+        "thelia/thelia-library-module": "1.*"
     },
     "extra": {
         "installer-name": "PopIn"
