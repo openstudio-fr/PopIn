@@ -127,7 +127,7 @@ class PopInCampaignEvent extends ActionEvent
      * @param UploadedFile $customImage
      * @return PopInCampaignEvent
      */
-    public function setCustomImage(UploadedFile $customImage = null)
+    public function setCustomImage(?UploadedFile $customImage = null)
     {
         $this->customImage = $customImage;
         return $this;

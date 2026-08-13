@@ -1,0 +1,41 @@
+{# Hook fragment: module.config-js for PopIn. Rendered in the scripts_extra block of the core
+   "Configure module" page via safe_hook('module.config-js', ...). Plain vanilla JS: no jQuery
+   dependency needed for the content-source-type field toggling below. #}
+<script type="text/javascript">
+(function () {
+    function displayContentSourceField(form) {
+        var select = form.querySelector('.js-popin-content-source-type');
+        var type = select ? select.value : '';
+
+        if (type === '') {
+            type = 'default';
+        }
+
+        form.querySelectorAll('.content-source-id-field').forEach(function (field) {
+            field.style.display = 'none';
+            field.querySelectorAll('.form-control, .form-select').forEach(function (input) {
+                input.disabled = true;
+            });
+        });
+
+        var active = form.querySelector('.content-source-id-field-' + type);
+        if (active) {
+            active.style.display = '';
+            active.querySelectorAll('.form-control, .form-select').forEach(function (input) {
+                input.disabled = false;
+            });
+        }
+    }
+
+    document.querySelectorAll('[data-testid="popin-campaign-create"] form, [data-testid="popin-campaign-row"] form').forEach(function (form) {
+        displayContentSourceField(form);
+
+        var select = form.querySelector('.js-popin-content-source-type');
+        if (select) {
+            select.addEventListener('change', function () {
+                displayContentSourceField(form);
+            });
+        }
+    });
+})();
+</script>

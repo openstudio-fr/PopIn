@@ -1,0 +1,139 @@
+{# Shared campaign fields, included once for the "create" row and once per existing campaign
+   ("update" row). `form` only supplies structural bits (field names via vars.full_name, the
+   content_source_type choices, the CSRF token rendered by form_start/form_end): actual VALUES
+   come from `campaign` (null for the create row) exactly like the original Smarty template,
+   where {form_field} only exposed $name/$type and the values were taken from the
+   pop-in-campaign loop variables. #}
+<div class="row g-2 align-items-start">
+    <div class="col-md-3">
+        <label class="form-label" for="popin_start_{{ row_id }}">{{ 'Start'|trans({}, 'popin.bo.default') }}</label>
+        <input type="datetime-local"
+               id="popin_start_{{ row_id }}"
+               name="{{ form.start.vars.full_name }}"
+               class="form-control"
+               value="{{ campaign and campaign.start ? campaign.start|date('Y-m-d\\TH:i') : '' }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="popin_end_{{ row_id }}">{{ 'End'|trans({}, 'popin.bo.default') }}</label>
+        <input type="datetime-local"
+               id="popin_end_{{ row_id }}"
+               name="{{ form.end.vars.full_name }}"
+               class="form-control"
+               value="{{ campaign and campaign.end ? campaign.end|date('Y-m-d\\TH:i') : '' }}">
+    </div>
+    <div class="col-md-3 content-source-type-form-group">
+        <label class="form-label" for="popin_content_source_type_{{ row_id }}">{{ 'Content source type'|trans({}, 'popin.bo.default') }}</label>
+        <select id="popin_content_source_type_{{ row_id }}" name="{{ form.content_source_type.vars.full_name }}" class="form-select js-popin-content-source-type">
+            <option value=""></option>
+            {% for choice in form.content_source_type.vars.choices %}
+                <option value="{{ choice.value }}" {{ campaign and campaign.content_source_type == choice.value ? 'selected' : '' }}>
+                    {{ choice.label }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label" for="popin_persistent_{{ row_id }}">{{ 'Persistent'|trans({}, 'popin.bo.default') }}</label>
+        <div class="form-check form-switch mt-2">
+            <input type="checkbox"
+                   class="form-check-input"
+                   id="popin_persistent_{{ row_id }}"
+                   name="{{ form.persistent.vars.full_name }}"
+                   {{ campaign and campaign.persistent ? 'checked' : '' }}>
+        </div>
+    </div>
+</div>
+
+<div class="js-popin-content-source-id-fields mt-2">
+    <div class="content-source-id-field content-source-id-field-default">
+        <label class="form-label" for="popin_content_source_id_default_{{ row_id }}">{{ 'Content source data'|trans({}, 'popin.bo.default') }}</label>
+        <input type="text" id="popin_content_source_id_default_{{ row_id }}" name="{{ form.content_source_id.vars.full_name }}" class="form-control" value="{{ campaign and campaign.content_source_type != 'content' and campaign.content_source_type != 'content-image' ? campaign.content_source_id : '' }}">
+    </div>
+    <div class="content-source-id-field content-source-id-field-content" style="display:none;">
+        <label class="form-label">{{ 'Content source data'|trans({}, 'popin.bo.default') }}</label>
+        <select name="{{ form.content_source_id.vars.full_name }}" class="form-select">
+            <option value=""></option>
+            {% for content in contents %}
+                <option value="{{ content.id }}" {{ campaign and campaign.content_source_type == 'content' and campaign.content_source_id == content.id ? 'selected' : '' }}>{{ content.title }}</option>
+            {% endfor %}
+        </select>
+        <div class="form-text">{{ 'This content will be displayed in the pop-in.'|trans({}, 'popin.bo.default') }}</div>
+    </div>
+    <div class="content-source-id-field content-source-id-field-content-image" style="display:none;">
+        <label class="form-label">{{ 'Content source data'|trans({}, 'popin.bo.default') }}</label>
+        <select name="{{ form.content_source_id.vars.full_name }}" class="form-select">
+            <option value=""></option>
+            {% for content in content_images %}
+                <option value="{{ content.id }}" {{ campaign and campaign.content_source_type == 'content-image' and campaign.content_source_id == content.id ? 'selected' : '' }}>{{ content.title }}</option>
+            {% endfor %}
+        </select>
+        <div class="form-text">{{ 'The first image in this content will be displayed in the pop-in.'|trans({}, 'popin.bo.default') }}</div>
+    </div>
+    <div class="content-source-id-field content-source-id-field-template" style="display:none;">
+        <label class="form-label">{{ 'Content source data'|trans({}, 'popin.bo.default') }}</label>
+        <input type="text" name="{{ form.content_source_id.vars.full_name }}" class="form-control" value="{{ campaign and campaign.content_source_type == 'template' ? campaign.content_source_id : '' }}">
+        <div class="form-text">{{ 'This template will be displayed in the pop-in.'|trans({}, 'popin.bo.default') }}</div>
+    </div>
+    <div class="content-source-id-field content-source-id-field-hook" style="display:none;">
+        <label class="form-label">{{ 'Content source data'|trans({}, 'popin.bo.default') }}</label>
+        <input type="text" name="{{ form.content_source_id.vars.full_name }}" class="form-control" value="{{ campaign and campaign.content_source_type == 'hook' ? campaign.content_source_id : '' }}">
+        <div class="form-text">{{ 'The pop-in.content hook will be called to display the pop-in. The content of this field will be available in the hook.'|trans({}, 'popin.bo.default') }}</div>
+    </div>
+    <div class="content-source-id-field content-source-id-field-custom" style="display:none;">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label class="form-label" for="popin_custom_title_{{ row_id }}">{{ 'Title'|trans({}, 'popin.bo.default') }}</label>
+                <input type="text" id="popin_custom_title_{{ row_id }}" name="{{ form.custom_title.vars.full_name }}" class="form-control" value="{{ campaign ? campaign.custom_title : '' }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="popin_custom_image_{{ row_id }}">{{ 'Image'|trans({}, 'popin.bo.default') }}</label>
+                <input type="file" id="popin_custom_image_{{ row_id }}" name="{{ form.custom_image.vars.full_name }}" class="form-control">
+            </div>
+            <div class="col-md-8">
+                <label class="form-label" for="popin_custom_description_{{ row_id }}">{{ 'Description'|trans({}, 'popin.bo.default') }}</label>
+                <textarea id="popin_custom_description_{{ row_id }}" name="{{ form.custom_description.vars.full_name }}" class="form-control" rows="3">{{ campaign ? campaign.custom_description : '' }}</textarea>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="popin_custom_postscriptum_{{ row_id }}">{{ 'Postscriptum'|trans({}, 'popin.bo.default') }}</label>
+                <input type="text" id="popin_custom_postscriptum_{{ row_id }}" name="{{ form.custom_postscriptum.vars.full_name }}" class="form-control" value="{{ campaign ? campaign.custom_postscriptum : '' }}">
+                <div class="row g-2 mt-1">
+                    <div class="col-6">
+                        <label class="form-label">{{ 'Link url'|trans({}, 'popin.bo.default') }}</label>
+                        <input type="text" name="{{ form.custom_link.vars.full_name }}" class="form-control" value="{{ campaign ? campaign.custom_link : '' }}">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">{{ 'Link text'|trans({}, 'popin.bo.default') }}</label>
+                        <input type="text" name="{{ form.custom_link_text.vars.full_name }}" class="form-control" value="{{ campaign ? campaign.custom_link_text : '' }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-2 mt-1">
+    <div class="col-md-3">
+        <label class="form-label">{{ 'Exclude category ids'|trans({}, 'popin.bo.default') }}</label>
+        <input type="text" name="{{ form.exclude_category_ids.vars.full_name }}" class="form-control" value="{{ campaign ? campaign.exclude_category_ids : '' }}">
+        <div class="form-text">{{ 'Ids separeted by commas, all subcategory and product in this category will also be excluded'|trans({}, 'popin.bo.default') }}</div>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">{{ 'Exclude content ids'|trans({}, 'popin.bo.default') }}</label>
+        <input type="text" name="{{ form.exclude_content_ids.vars.full_name }}" class="form-control" value="{{ campaign ? campaign.exclude_content_ids : '' }}">
+        <div class="form-text">{{ 'Ids separeted by commas'|trans({}, 'popin.bo.default') }}</div>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">{{ 'Exclude Folder ids'|trans({}, 'popin.bo.default') }}</label>
+        <input type="text" name="{{ form.exclude_folder_ids.vars.full_name }}" class="form-control" value="{{ campaign ? campaign.exclude_folder_ids : '' }}">
+        <div class="form-text">{{ 'Ids separeted by commas, all subfolder and content in this folder will also be excluded'|trans({}, 'popin.bo.default') }}</div>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">{{ 'Exclude url'|trans({}, 'popin.bo.default') }}</label>
+        <input type="text" name="{{ form.exclude_url.vars.full_name }}" class="form-control" value="{{ campaign ? campaign.exclude_url : '' }}">
+        <div class="form-text">{{ 'URL separated by commas, like "/login,/register"'|trans({}, 'popin.bo.default') }}</div>
+    </div>
+</div>
+<div class="form-check mt-2">
+    <input type="checkbox" class="form-check-input" id="popin_exclude_home_{{ row_id }}" name="{{ form.exclude_home.vars.full_name }}" {{ campaign and campaign.exclude_home ? 'checked' : '' }}>
+    <label class="form-check-label" for="popin_exclude_home_{{ row_id }}">{{ 'Exclude from home'|trans({}, 'popin.bo.default') }}</label>
+</div>

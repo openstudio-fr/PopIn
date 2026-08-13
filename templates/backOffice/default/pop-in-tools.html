@@ -1,8 +1,0 @@
-{* PopIn module entries in the tool page *}
-
-{loop name="auth-pop-in-campaigns" type="auth" role="ADMIN" resource="admin.module" access="VIEW" module="PopIn"}
-    <tr>
-        <td><a href="{url path='/admin/module/PopIn'}">{intl l='Pop-in campaigns' d='popin.bo.default'}</a></td>
-        <td><a class="btn btn-default btn-xs" href="{url path='/admin/module/PopIn'}"><i class="glyphicon glyphicon-edit"></i></a></td>
-    </tr>
-{/loop}

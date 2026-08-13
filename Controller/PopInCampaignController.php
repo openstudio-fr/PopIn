@@ -40,16 +40,14 @@ class PopInCampaignController extends AbstractCrudController
     /**
      * Return the creation form for this object
      */
-    protected function getCreationForm()
-    {
+    protected function getCreationForm(): ?\Thelia\Form\BaseForm {
         return $this->createForm("pop_in_campaign.create");
     }
 
     /**
      * Return the update form for this object
      */
-    protected function getUpdateForm($data = array())
-    {
+    protected function getUpdateForm($data = array()): ?\Thelia\Form\BaseForm {
         if (!is_array($data)) {
             $data = array();
         }
@@ -62,8 +60,7 @@ class PopInCampaignController extends AbstractCrudController
      *
      * @param PopInCampaign $object
      */
-    protected function hydrateObjectForm(ParserContext $parserContext, $object)
-    {
+    protected function hydrateObjectForm(ParserContext $parserContext, $object): \Thelia\Form\BaseForm {
         $data = array(
             "id" => $object->getId(),
             "start" => $object->getStart(),
@@ -92,8 +89,7 @@ class PopInCampaignController extends AbstractCrudController
      * @param mixed $formData
      * @return \Thelia\Core\Event\ActionEvent
      */
-    protected function getCreationEvent($formData)
-    {
+    protected function getCreationEvent($formData): \Thelia\Core\Event\ActionEvent|\Propel\Runtime\Event\ActiveRecordEvent|null {
         $event = new PopInCampaignEvent();
 
         $event->setStart($formData["start"]);
@@ -104,6 +100,7 @@ class PopInCampaignController extends AbstractCrudController
         $event->setCustomImage($formData["custom_image"]);
         $event->setCustomDescription($formData["custom_description"]);
         $event->setCustomPostscriptum($formData["custom_postscriptum"]);
+        $event->setCustomLink($formData["custom_link"]);
         $event->setCustomLinkText($formData["custom_link_text"]);
         $event->setExcludeCategoryIds($formData["exclude_category_ids"]);
         $event->setExcludeFolderIds($formData["exclude_folder_ids"]);
@@ -121,8 +118,7 @@ class PopInCampaignController extends AbstractCrudController
      * @param mixed $formData
      * @return \Thelia\Core\Event\ActionEvent
      */
-    protected function getUpdateEvent($formData)
-    {
+    protected function getUpdateEvent($formData): \Thelia\Core\Event\ActionEvent|\Propel\Runtime\Event\ActiveRecordEvent|null {
         $event = new PopInCampaignEvent();
 
         $event->setId($formData["id"]);
@@ -149,8 +145,7 @@ class PopInCampaignController extends AbstractCrudController
     /**
      * Creates the delete event with the provided form data
      */
-    protected function getDeleteEvent()
-    {
+    protected function getDeleteEvent(): \Propel\Runtime\Event\ActiveRecordEvent|\Thelia\Core\Event\ActionEvent|null {
         $event = new PopInCampaignEvent();
 
         $event->setId($this->getRequest()->get("pop_in_campaign_id"));
@@ -163,8 +158,7 @@ class PopInCampaignController extends AbstractCrudController
      *
      * @param mixed $event
      */
-    protected function eventContainsObject($event)
-    {
+    protected function eventContainsObject($event): bool {
         return null !== $this->getObjectFromEvent($event);
     }
 
@@ -173,16 +167,14 @@ class PopInCampaignController extends AbstractCrudController
      *
      * @param mixed $event
      */
-    protected function getObjectFromEvent($event)
-    {
+    protected function getObjectFromEvent($event): mixed {
         return $event->getPopInCampaign();
     }
 
     /**
      * Load an existing object from the database
      */
-    protected function getExistingObject()
-    {
+    protected function getExistingObject(): ?\Propel\Runtime\ActiveRecord\ActiveRecordInterface {
         return PopInCampaignQuery::create()
             ->findPk($this->getRequest()->query->get("pop_in_campaign_id"))
             ;
@@ -193,8 +185,7 @@ class PopInCampaignController extends AbstractCrudController
      *
      * @param mixed $object
      */
-    protected function getObjectLabel($object)
-    {
+    protected function getObjectLabel($object): ?string {
         return '';
     }
 
@@ -203,46 +194,45 @@ class PopInCampaignController extends AbstractCrudController
      *
      * @param mixed $object
      */
-    protected function getObjectId($object)
-    {
+    protected function getObjectId($object): int {
         return $object->getId();
     }
 
     /**
-     * Render the main list template
+     * Render the main list template.
+     *
+     * Migration Thelia 3 : l'ecran "Pop-in campaigns" est desormais porte par le hook
+     * module.configuration de la route coeur admin.module.configure (voir
+     * PopIn\Hook\Back\BackHook) : cette methode (appelee notamment par le chemin d'erreur de
+     * createAction() en cas de formulaire invalide) redirige donc vers cette route au lieu de
+     * rendre "pop-in-config" (qui retomberait sur le Smarty T2 casse). Le hook recupere lui-meme
+     * les erreurs de formulaire persistees en session via getForm() (TwigEngine\Service\FormService
+     * -> ParserContext::getForm()), donc les messages d'erreur restent visibles apres redirection.
      *
      * @param mixed $currentOrder , if any, null otherwise.
      */
-    protected function renderListTemplate($currentOrder)
-    {
-        $this->getParser()
-            ->assign("order", $currentOrder)
-        ;
-
-        return $this->render("pop-in-config");
+    protected function renderListTemplate($currentOrder): \Symfony\Component\HttpFoundation\Response {
+        return new RedirectResponse(
+            URL::getInstance()->absoluteUrl("/admin/module/PopIn")
+        );
     }
 
     /**
-     * Render the edition template
+     * Render the edition template.
+     *
+     * Migration Thelia 3 : idem renderListTemplate() ci-dessus.
      */
-    protected function renderEditionTemplate()
-    {
-        $this->getParserContext()
-            ->set(
-                "pop_in_campaign_id",
-                $this->getRequest()->query->get("pop_in_campaign_id")
-            )
-        ;
-
-        return $this->render("pop-in-config");
+    protected function renderEditionTemplate(): \Symfony\Component\HttpFoundation\Response {
+        return new RedirectResponse(
+            URL::getInstance()->absoluteUrl("/admin/module/PopIn")
+        );
     }
 
     /**
      * Must return a RedirectResponse instance
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      */
-    protected function redirectToEditionTemplate()
-    {
+    protected function redirectToEditionTemplate(): \Symfony\Component\HttpFoundation\Response|\Symfony\Component\HttpFoundation\RedirectResponse {
         $id = $this->getRequest()->query->get("pop_in_campaign_id");
 
         return new RedirectResponse(
@@ -259,8 +249,7 @@ class PopInCampaignController extends AbstractCrudController
      * Must return a RedirectResponse instance
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      */
-    protected function redirectToListTemplate()
-    {
+    protected function redirectToListTemplate(): \Symfony\Component\HttpFoundation\Response|\Symfony\Component\HttpFoundation\RedirectResponse {
         return new RedirectResponse(
             URL::getInstance()->absoluteUrl("/admin/module/PopIn")
         );

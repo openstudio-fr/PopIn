@@ -45,7 +45,7 @@ class FrontHook extends BaseHook
      * @param PopInCampaign $campaign
      * @return string
      */
-    public static function getSeenSessionKeyForPopInCampaign(PopInCampaign $campaign = null, $campaignId = null)
+    public static function getSeenSessionKeyForPopInCampaign(?PopInCampaign $campaign = null, $campaignId = null)
     {
         $id = $campaign ? $campaign->getId() : $campaignId;
         return static::$BASE_SESSION_KEY_CAMPAIGN_SEEN . '.' . $id;

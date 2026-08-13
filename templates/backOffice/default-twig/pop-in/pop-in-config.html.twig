@@ -1,0 +1,134 @@
+{# Hook fragment: module.configuration for PopIn. Rendered inside the core "Configure module"
+   page (@BackOfficeDefaultTwig/module/configure.html.twig), which dispatches
+   safe_hook('module.configuration', ...). No {% extends %}: this is a fragment, not a page.
+
+   Form fields are mostly structural only (name attributes, choices, CSRF token): actual field
+   VALUES are driven from the per-campaign PHP-prepared arrays, exactly like the original Smarty
+   template did (the {form_field} tag only supplied $name/$type, values came from the
+   pop-in-campaign loop variables). Every visible field is rendered by hand in
+   _pop-in-campaign-fields.html.twig and marked `setRendered` below so that form_end() only
+   auto-renders what's left unrendered: success_url (forced to the module-configure URL, like the
+   original {render_form_field ... value=...} override), error_url and the CSRF _token field.
+
+   IMPORTANT: getForm() builds a FRESH FormView each call (TwigEngine\Service\FormService ->
+   ParserContext::getForm() returns null on a normal GET, falling back to
+   TheliaFormFactory::createForm()). A FormView must never be reused across several
+   form_start()/form_end() pairs on the same page (Twig's form renderer marks it "rendered" after
+   the first form_end()), so the update form is fetched again for EACH campaign row below, right
+   before its own form_theme/form_start. #}
+{% set module_configure_url = path('admin.module.configure', { module_code: 'PopIn' }) %}
+
+<div class="card" data-testid="popin-campaigns">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <h2 class="h6 mb-0">{{ 'Pop-in campaigns'|trans({}, 'popin.bo.default') }}</h2>
+        {{ component('BoLanguageSwitcher', { currentLanguageId: edit_language_id }) }}
+    </div>
+    <div class="card-body">
+
+        {% if is_granted('CREATE', { resource: 'admin.module', module: 'PopIn' }) %}
+            {% set create_form = getForm('pop_in_campaign.create') %}
+            {% form_theme create_form with bo_form_themes only %}
+            <div class="border rounded p-3 mb-4 bg-body-tertiary" data-testid="popin-campaign-create">
+                <h3 class="h6">{{ 'Create'|trans }}</h3>
+                {{ form_start(create_form, { action: create_action, method: 'post' }) }}
+                    {% include '@PopInModule/backOffice/default-twig/pop-in/_pop-in-campaign-fields.html.twig' with {
+                        form: create_form,
+                        campaign: null,
+                        row_id: 'new',
+                        contents: contents,
+                        content_images: content_images,
+                    } only %}
+                    {% do create_form.start.setRendered %}
+                    {% do create_form.end.setRendered %}
+                    {% do create_form.content_source_type.setRendered %}
+                    {% do create_form.content_source_id.setRendered %}
+                    {% do create_form.custom_title.setRendered %}
+                    {% do create_form.custom_image.setRendered %}
+                    {% do create_form.custom_description.setRendered %}
+                    {% do create_form.custom_postscriptum.setRendered %}
+                    {% do create_form.custom_link.setRendered %}
+                    {% do create_form.custom_link_text.setRendered %}
+                    {% do create_form.exclude_category_ids.setRendered %}
+                    {% do create_form.exclude_folder_ids.setRendered %}
+                    {% do create_form.exclude_content_ids.setRendered %}
+                    {% do create_form.exclude_home.setRendered %}
+                    {% do create_form.exclude_url.setRendered %}
+                    {% do create_form.persistent.setRendered %}
+                    {{ form_widget(create_form.success_url, { value: module_configure_url }) }}
+                    {% do create_form.success_url.setRendered %}
+
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-success" title="{{ 'Add a campaign'|trans({}, 'popin.bo.default') }}" data-testid="popin-campaign-create-submit">
+                            {{ 'Create'|trans }} <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                {{ form_end(create_form) }}
+            </div>
+        {% endif %}
+
+        {% for campaign in campaigns %}
+            <div class="border rounded p-3 mb-3" data-testid="popin-campaign-row" data-campaign-id="{{ campaign.id }}">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+                    <div>
+                        {% if campaign.is_active %}
+                            <span class="badge text-bg-success">{{ 'Active'|trans({}, 'popin.bo.default') }}</span>
+                        {% else %}
+                            <span class="badge text-bg-secondary">{{ 'Inactive'|trans({}, 'popin.bo.default') }}</span>
+                        {% endif %}
+                        <span class="text-muted ms-2">#{{ campaign.id }}</span>
+                    </div>
+                    {% if is_granted('DELETE', { resource: 'admin.module', module: 'PopIn' }) %}
+                        <a class="btn btn-outline-danger btn-sm" href="{{ campaign.delete_url }}&_token={{ assignToken() }}"
+                           title="{{ 'Delete this campaign'|trans({}, 'popin.bo.default') }}"
+                           onclick="return confirm('{{ 'Delete this campaign'|trans({}, 'popin.bo.default')|e('js') }}?');"
+                           data-testid="popin-campaign-delete">
+                            <i class="bi bi-trash" aria-hidden="true"></i>
+                        </a>
+                    {% endif %}
+                </div>
+
+                {% if is_granted('UPDATE', { resource: 'admin.module', module: 'PopIn' }) %}
+                    {% set update_form = getForm('pop_in_campaign.update') %}
+                    {% form_theme update_form with bo_form_themes only %}
+                    {{ form_start(update_form, { action: edit_action, method: 'post' }) }}
+                        {% include '@PopInModule/backOffice/default-twig/pop-in/_pop-in-campaign-fields.html.twig' with {
+                            form: update_form,
+                            campaign: campaign,
+                            row_id: campaign.id,
+                            contents: contents,
+                            content_images: content_images,
+                        } only %}
+                        {% do update_form.start.setRendered %}
+                        {% do update_form.end.setRendered %}
+                        {% do update_form.content_source_type.setRendered %}
+                        {% do update_form.content_source_id.setRendered %}
+                        {% do update_form.custom_title.setRendered %}
+                        {% do update_form.custom_image.setRendered %}
+                        {% do update_form.custom_description.setRendered %}
+                        {% do update_form.custom_postscriptum.setRendered %}
+                        {% do update_form.custom_link.setRendered %}
+                        {% do update_form.custom_link_text.setRendered %}
+                        {% do update_form.exclude_category_ids.setRendered %}
+                        {% do update_form.exclude_folder_ids.setRendered %}
+                        {% do update_form.exclude_content_ids.setRendered %}
+                        {% do update_form.exclude_home.setRendered %}
+                        {% do update_form.exclude_url.setRendered %}
+                        {% do update_form.persistent.setRendered %}
+                        {{ form_widget(update_form.id, { value: campaign.id }) }}
+                        {% do update_form.id.setRendered %}
+                        {{ form_widget(update_form.success_url, { value: module_configure_url }) }}
+                        {% do update_form.success_url.setRendered %}
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary btn-sm" title="{{ 'Edit this campaign'|trans({}, 'popin.bo.default') }}" data-testid="popin-campaign-save">
+                                <i class="bi bi-floppy" aria-hidden="true"></i> {{ 'Save'|trans }}
+                            </button>
+                        </div>
+                    {{ form_end(update_form) }}
+                {% endif %}
+            </div>
+        {% else %}
+            <p class="text-muted" data-testid="popin-campaigns-empty">{{ 'No pop-in campaign yet.'|trans({}, 'popin.bo.default') }}</p>
+        {% endfor %}
+    </div>
+</div>

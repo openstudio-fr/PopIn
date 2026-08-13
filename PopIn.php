@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ServicesConfigurat
 use Symfony\Component\Finder\Finder;
 use Thelia\Core\Template\TemplateDefinition;
 use Thelia\Core\Translation\Translator;
-use Thelia\Install\Database;
+use Thelia\Core\Install\Database;
 use Thelia\Model\Config;
 use Thelia\Model\ConfigQuery;
 use Thelia\Model\Folder;
@@ -30,7 +30,7 @@ class PopIn extends BaseModule
 
     const CONF_KEY_IMAGE_FOLDER_ID = "popin.image_folder_id";
 
-    public function postActivation(ConnectionInterface $con = null): void
+    public function postActivation(?ConnectionInterface $con = null): void
     {
         if (!self::getConfigValue('is_initialized', false)) {
             $database = new Database($con);
@@ -40,7 +40,7 @@ class PopIn extends BaseModule
         $this->createPopInImageFolder();
     }
 
-    public function getHooks()
+    public function getHooks(): array
     {
         return [
             [
@@ -75,7 +75,8 @@ class PopIn extends BaseModule
         try {
             // create the folder
             $folder = new Folder();
-            $folder->setVisible(false);
+            // folder.visible est un TINYINT : setter `?int` en T3 (D-006).
+            $folder->setVisible(0);
 
             /** @var Lang $lang */
             foreach (LangQuery::create()->find() as $lang) {
@@ -104,7 +105,8 @@ class PopIn extends BaseModule
                 $config
                     ->setName(static::CONF_KEY_IMAGE_FOLDER_ID)
                     ->setValue($folder->getId())
-                    ->setHidden(false);
+                    // config.hidden est un TINYINT : setter `?int` en T3 (D-006).
+                    ->setHidden(0);
 
                 /** @var Lang $lang */
                 foreach (LangQuery::create()->find() as $lang) {
@@ -143,12 +145,17 @@ class PopIn extends BaseModule
     public static function configureServices(ServicesConfigurator $servicesConfigurator): void
     {
         $servicesConfigurator->load(self::getModuleCode().'\\', __DIR__)
-            ->exclude([THELIA_MODULE_DIR . ucfirst(self::getModuleCode()). "/I18n/*"])
+            ->exclude([
+                __DIR__.'/I18n',
+                __DIR__.'/Config',
+                __DIR__.'/Tests',
+                __FILE__,
+            ])
             ->autowire(true)
             ->autoconfigure(true);
     }
 
-    public function update($currentVersion, $newVersion, ConnectionInterface $con = null): void
+    public function update($currentVersion, $newVersion, ?ConnectionInterface $con = null): void
     {
         $finder = Finder::create()
             ->name('*.sql')

@@ -17,4 +17,11 @@ return [
     'Add a campaign' => 'Add a campaign',
     'Edit this campaign' => 'Edit this campaign',
     'Delete this campaign' => 'Delete this campaign',
+    'Persistent' => 'Persistent',
+    'Content source type' => 'Content source type',
+    'Content source data' => 'Content source data',
+    'No pop-in campaign yet.' => 'No pop-in campaign yet.',
+    'Active' => 'Active',
+    'Inactive' => 'Inactive',
+    'TopBar' => 'TopBar',
 ];

@@ -22,7 +22,7 @@ class PopInCampaignCreateForm extends BaseForm
 
     const FORM_NAME = "pop_in_campaign_create";
 
-    public static function getName()
+    public static function getName(): string
     {
         return static::FORM_NAME;
     }

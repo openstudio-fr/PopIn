@@ -217,7 +217,7 @@ class PopInCampaignAction extends BaseAction implements EventSubscriberInterface
      * @param \DateTime $end
      * @throws \InvalidArgumentException
      */
-    protected function validateCampaignDates(\DateTime $start = null, \DateTime $end = null)
+    protected function validateCampaignDates(?\DateTime $start = null, ?\DateTime $end = null)
     {
         if ($start !== null && $end !== null && $start > $end) {
             throw new \InvalidArgumentException('Pop-in campaign starts after it ends.');

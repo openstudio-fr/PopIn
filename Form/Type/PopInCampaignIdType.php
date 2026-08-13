@@ -15,12 +15,11 @@ use Thelia\Core\Form\Type\Field\AbstractIdType;
  */
 class PopInCampaignIdType extends AbstractIdType
 {
-    protected function getQuery()
-    {
+    protected function getQuery(): \Propel\Runtime\ActiveQuery\ModelCriteria {
         return new PopInCampaignQuery();
     }
 
-    public function getName()
+    public function getName(): string
     {
         return static::class;
     }

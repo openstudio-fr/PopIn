@@ -1,0 +1,11 @@
+{# PopIn module entry in the tool page #}
+{% if is_granted('VIEW', { resource: 'admin.module', module: 'PopIn' }) %}
+    <tr data-testid="popin-tools-row">
+        <td><a href="{{ path('admin.module.configure', { module_code: 'PopIn' }) }}">{{ 'Pop-in campaigns'|trans({}, 'popin.bo.default') }}</a></td>
+        <td>
+            <a class="btn btn-outline-secondary btn-sm" href="{{ path('admin.module.configure', { module_code: 'PopIn' }) }}">
+                <i class="bi bi-pencil-square" aria-hidden="true"></i>
+            </a>
+        </td>
+    </tr>
+{% endif %}

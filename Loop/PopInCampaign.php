@@ -2,6 +2,7 @@
 
 namespace PopIn\Loop;
 
+use PopIn\Model\Map\PopInCampaignTableMap;
 use PopIn\Model\PopInCampaignQuery;
 use Propel\Runtime\ActiveQuery\Criteria;
 use Thelia\Core\Template\Element\BaseI18nLoop;
@@ -23,7 +24,7 @@ class PopInCampaign extends BaseI18nLoop implements PropelSearchLoopInterface
      *
      * @return LoopResult
      */
-    public function parseResults(LoopResult $loopResult)
+    public function parseResults(LoopResult $loopResult): LoopResult
     {
         /** @var \PopIn\Model\PopInCampaign $entry */
         foreach ($loopResult->getResultDataCollection() as $entry) {
@@ -78,10 +79,14 @@ class PopInCampaign extends BaseI18nLoop implements PropelSearchLoopInterface
      *
      * @return \Thelia\Core\Template\Loop\Argument\ArgumentCollection
      */
-    protected function getArgDefinitions()
+    protected function getArgDefinitions(): \Thelia\Core\Template\Loop\Argument\ArgumentCollection
     {
         return new ArgumentCollection(
             Argument::createIntListTypeArgument("id"),
+            // Restaure du T2 (override/modules/PopIn) : sans cette declaration
+            // BaseLoop::initializeArgs() ignore SILENCIEUSEMENT `check_date=1`
+            // dans les templates, et la loop renvoie aussi les campagnes expirees.
+            Argument::createBooleanTypeArgument("check_date", false),
             Argument::createAnyTypeArgument("content_source_type"),
             Argument::createAnyTypeArgument("exclude_content_source_type"),
             Argument::createAnyTypeArgument("content_source_id"),
@@ -109,9 +114,27 @@ class PopInCampaign extends BaseI18nLoop implements PropelSearchLoopInterface
      *
      * @return \Propel\Runtime\ActiveQuery\ModelCriteria
      */
-    public function buildModelCriteria()
+    public function buildModelCriteria(): \Propel\Runtime\ActiveQuery\ModelCriteria
     {
-        $query = new PopInCampaignQuery();
+        $query = PopInCampaignQuery::create();
+
+        if (true === $this->getCheckDate()) {
+            $now = new \DateTime();
+
+            // Fenetre de validite : (start IS NULL OR start <= now)
+            //                   AND (end   IS NULL OR end   >= now)
+            // L'enchainement `_or()` / `_and()` du T2 basculait tout le WHERE en OR
+            // et donnait `A OR (B AND C) OR D`. On groupe explicitement.
+            $query
+                ->condition('start_null', PopInCampaignTableMap::COL_START.Criteria::ISNULL)
+                ->condition('start_past', PopInCampaignTableMap::COL_START.Criteria::LESS_EQUAL.'?', $now)
+                ->combine(['start_null', 'start_past'], Criteria::LOGICAL_OR, 'started')
+                ->condition('end_null', PopInCampaignTableMap::COL_END.Criteria::ISNULL)
+                ->condition('end_future', PopInCampaignTableMap::COL_END.Criteria::GREATER_EQUAL.'?', $now)
+                ->combine(['end_null', 'end_future'], Criteria::LOGICAL_OR, 'not_ended')
+                // combine() sans nom applique directement la condition au WHERE.
+                ->combine(['started', 'not_ended'], Criteria::LOGICAL_AND);
+        }
 
         if (null !== $id = $this->getId()) {
             $query->filterById($id);

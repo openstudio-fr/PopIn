@@ -2,9 +2,8 @@
 <routes xmlns="http://symfony.com/schema/routing" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://symfony.com/schema/routing http://symfony.com/schema/routing/routing-1.0.xsd">
 
-    <route id="popin.config" path="/admin/module/PopIn">
-        <default key="_controller">PopIn\Controller\ConfigurationController::configAction</default>
-    </route>
+    <!-- The /admin/module/PopIn screen is served by the core route admin.module.configure,
+         which renders the module.configuration hook (BackHook::onModuleConfiguration). -->
     <route id="popin.pop_in_campaign.create" path="/admin/module/PopIn/pop_in_campaign" methods="post">
         <default key="_controller">PopIn\Controller\PopInCampaignController::createAction</default>
     </route>
